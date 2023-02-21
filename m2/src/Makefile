@@ -32,6 +32,7 @@ LINKER_FILE = ../msp432p401r.lds
 CPU = cortex-m4
 ARCH = thumb
 SPECS = nonsys.specs
+SIZE = arm-none-eabi-size
 
 # Compiler Flags and Defines
 CC = arm-none-eabi-gcc
@@ -48,6 +49,7 @@ LINKER_FILE =
 CPU = 
 ARCH = 
 SPECS = 
+SIZE = size
 
 # Compiler Flags and Defines
 CC = gcc
@@ -60,27 +62,20 @@ endif
 
 CFLAGS += -Wall -Werror -g -O0 -std=c99
 
+TARGET = c1m1
 OBJS = $(SOURCES:.c=.o)
 
-%.i:
+%.i: %.c
 #Generate the preprocessed output of all c-program implementation files (use the –E flag).
-
-
-
-#%.c:
-#	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $(TARGET) $(OBJS)
+	$(CC) -E $< $(CFLAGS) $(CPPFLAGS) -o $@
 
 %.o: %.c
-#Generate the preprocessed output of all c-program implementation files (use the –E flag).
+#Generate the object file for all c-source files (but do not link) by specifying the object file you want to compile.
 	$(CC) -c $< $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $@
 
-%.asm:
+%.asm: %.c
 #Generate assembly output of c-program implementation files and the final output executable (Use the –S flag and the objdump utility).
-	$(CC) $(CPPFLAGS) $(CFLAGS) -S $@
-	
-%.o:
-#Generate the object file for all c-source files (but do not link) by specifying the object file you want to compile.
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(STOP_LINK_FLAG) $@
+	$(CC) -S $< $(CFLAGS) $(CPPFLAGS) -o $@
 
 		
 compile-all:
@@ -92,11 +87,11 @@ build: $(TARGET).out
 	
 
 $(TARGET).out: $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) -o $@
-	
+	$(CC) $(OBJS) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@
+	$(SIZE) $@
 clean:
 #This should remove all compiled objects, preprocessed outputs, assembly outputs, executable files and build output files.
-	rm -f $(OBJS) $(TARGET).out $(TARGET).map
+	rm -f *.out *.map *.o *.asm *.i
 
 
 .PHONY: compile-all build clean
